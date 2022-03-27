@@ -43,6 +43,9 @@
 
 #include <ModbusRtu.h>
 #include <softSerial.h>
+#include "HDC1080.h"
+
+HDC1080 hdc1080;
 
 // data array for modbus network sharing
 uint16_t au16data[16];
@@ -66,12 +69,18 @@ modbus_t telegram;
 
 unsigned long u32wait;
 
+void read_HDC1080();
 void read_wanderer();
 
 void setup() {
+  // start hard and soft serial ports
   Serial.begin( 115200 ); 
-  Serial.println( "Started hardware serial ..." );
   mySerial.begin(9600);//use the hardware serial if you want to connect to your computer via usb cable, etc.
+	// turn on voltage to the sensor and start it
+	pinMode(Vext,OUTPUT);
+	digitalWrite(Vext,LOW);
+  hdc1080.begin(0x40);
+  // start modbus
   master.start(); // start the ModBus object.
   master.setTimeOut( 2000 ); // if there is no answer in 2000 ms, roll over
   u32wait = millis() + 1000;
@@ -80,6 +89,16 @@ void setup() {
 
 void loop() {
   read_wanderer();
+  //read_HDC1080();
+  //delay(3000);
+}
+
+void read_HDC1080(){
+	Serial.print("T=");
+	Serial.print(hdc1080.readTemperature());
+	Serial.print("C, RH=");
+	Serial.print(hdc1080.readHumidity());
+	Serial.println("%");
 }
 
 void read_wanderer(){
