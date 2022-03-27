@@ -31,26 +31,25 @@ unsigned long u32wait;
 
 void read_HDC1080();
 void read_wanderer();
-modbus_t write_telegram(uint16_t regadd);
+modbus_t write_telegram(uint16_t regadd, uint16_t outdata[16]);
 
 void setup() {
   // start hard and soft serial ports
   Serial.begin( 115200 ); 
   softwareSerial.begin(9600);
 	// turn on voltage to the sensor and start it
-	pinMode(Vext,OUTPUT);
-	digitalWrite(Vext,LOW);
-  hdc1080.begin(0x40);
+	//pinMode(Vext,OUTPUT);
+	//digitalWrite(Vext,LOW);
+  //hdc1080.begin(0x40);
   // start modbus
   master.start(); // start the ModBus object.
   master.setTimeOut( 2000 ); // if there is no answer in 2000 ms, roll over
-  u32wait = millis() + 1000;
-  u8state = 0; 
+  delay(1000);
 }
 
 void loop() {
   read_wanderer();
-  read_HDC1080();
+  //read_HDC1080();
   delay(1000);
 }
 
@@ -63,13 +62,12 @@ void read_HDC1080(){
 }
 
 void read_wanderer(){
-  delay(500);
-  master.query( write_telegram(0x0100) ); // send query (only once)
-  delay(500);
+  uint16_t voltage[16];
+  master.query( write_telegram(0x0101, voltage) ); // send query (only once)
   master.poll(); // check incoming messages
-  delay(500);
-  Serial.println(au16data[0]);
-
+  while ( master.getState() == COM_WAITING ); // wait until com state is idle
+  Serial.println(voltage[0]);
+/*
   delay(500);
   master.query( write_telegram(0x0101) ); // send query (only once)
   delay(500);
@@ -90,13 +88,14 @@ void read_wanderer(){
   master.poll(); // check incoming messages
   delay(500);
   Serial.println(au16data[0]);
+  */
 }
 
-modbus_t write_telegram(uint16_t regadd){
+modbus_t write_telegram(uint16_t regadd, uint16_t outdata[16]){
   telegram.u8id = 0x01; // slave address
   telegram.u8fct = 0x03; // function code (this one is registers read)
   telegram.u16RegAdd = regadd; // start address in slave
   telegram.u16CoilsNo = 1; // number of elements (coils or registers) to read
-  telegram.au16reg = au16data; // pointer to a memory array in the Arduino
+  telegram.au16reg = outdata; // pointer to a memory array in the Arduino
   return telegram;
 }
