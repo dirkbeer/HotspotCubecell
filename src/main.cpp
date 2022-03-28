@@ -33,7 +33,7 @@ void loop() {
     u8state++;
     break;
   case 2: // complete things
-    if ( wanderer_read() == COM_IDLE) {
+    if ( wanderer_read() == COM_IDLE) {  // currently printing everything on every wanderer reading returned - how to disentangle to print only once everything is available?
       u8state = 0;
       u32wait = millis() + 2000;
       Serial.println( battery_voltage );
