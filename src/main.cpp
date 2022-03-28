@@ -162,25 +162,19 @@ void loop() {
     }
     case DEVICE_STATE_SEND:
     {
-      appDataSize = 10;
+      appDataSize = 8;
       // hdc1080 data
-      unsigned char *puc;
-      puc = (unsigned char *)(&temperature);
-      appDataSize = 12;
-      appData[0] = puc[0];
-      appData[1] = puc[1];
-      appData[2] = puc[2];
-      appData[3] = puc[3];
-      puc = (unsigned char *)(&humidity);
-      appData[4] = puc[0];
-      appData[5] = puc[1];
-      appData[6] = puc[2];
-      appData[7] = puc[3];
+      int16_t tempInt = temperature * 100;
+      appData[0] = tempInt >> 8;
+      appData[1] = tempInt;
+      int16_t humidInt = humidity * 100;
+      appData[2] = humidInt >> 8;
+      appData[3] = humidInt;
       // wanderer data
-      appData[8] = (uint8_t)(au16data[0]>>8);
-      appData[9] = (uint8_t)au16data[0];
-      appData[10] = (uint8_t)(au16data[1]>>8);
-      appData[11] = (uint8_t)au16data[1];
+      appData[4] = (uint8_t)(au16data[0]>>8);
+      appData[5] = (uint8_t)au16data[0];
+      appData[6] = (uint8_t)(au16data[4]>>8);
+      appData[7] = (uint8_t)au16data[4];
       LoRaWAN.send();
       deviceState = DEVICE_STATE_CYCLE;
       break;
