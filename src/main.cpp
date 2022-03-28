@@ -78,17 +78,24 @@ uint8_t appPort = 2;
 uint8_t confirmedNbTrials = 4;
 
 void wanderer_setup(){
+  // battery voltage
   telegram[0].u8id = 0x01; // slave address
   telegram[0].u8fct = 0x03; // function code (this one is registers read)
   telegram[0].u16RegAdd = 0x0101; // start address in slave
   telegram[0].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
   telegram[0].au16reg = au16data; // pointer to a memory array in the Arduino
-
+  // load voltage
   telegram[1].u8id = 0x01; // slave address
   telegram[1].u8fct = 0x03; // function code (this one is registers read)
-  telegram[1].u16RegAdd = 0x0105; // start address in slave
+  telegram[1].u16RegAdd = 0x0104; // start address in slave
   telegram[1].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
   telegram[1].au16reg = au16data + 4; // pointer to a memory array in the Arduino
+  // load current
+  telegram[2].u8id = 0x01; // slave address
+  telegram[2].u8fct = 0x03; // function code (this one is registers read)
+  telegram[2].u16RegAdd = 0x0105; // start address in slave
+  telegram[2].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
+  telegram[2].au16reg = au16data + 8; // pointer to a memory array in the Arduino
 
   softwareSerial.begin(9600);//use the hardware serial if you want to connect to your computer via usb cable, etc.
   master.start(); // start the ModBus object.
@@ -107,7 +114,8 @@ uint8_t wanderer_read(){
   master.poll(); // check incoming messages
   // calculate based on latest in the data array, even if incoming message was not yet received
   battery_voltage = (double) au16data[0] * 0.1; 
-  load_current = (double) au16data[4] * 0.01; 
+  load_voltage = (double) au16data[4] * 0.1; 
+  load_current = (double) au16data[8] * 0.01; 
   return master.getState();
 }
 
@@ -162,7 +170,7 @@ void loop() {
     }
     case DEVICE_STATE_SEND:
     {
-      appDataSize = 8;
+      appDataSize = 10;
       // hdc1080 data
       int16_t tempInt = temperature * 100;
       appData[0] = tempInt >> 8;
@@ -175,6 +183,8 @@ void loop() {
       appData[5] = (uint8_t)au16data[0];
       appData[6] = (uint8_t)(au16data[4]>>8);
       appData[7] = (uint8_t)au16data[4];
+      appData[8] = (uint8_t)(au16data[8]>>8);
+      appData[9] = (uint8_t)au16data[8];
       LoRaWAN.send();
       deviceState = DEVICE_STATE_CYCLE;
       break;
