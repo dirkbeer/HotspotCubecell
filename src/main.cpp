@@ -1,102 +1,95 @@
-/**
- *  Modbus master example 2:
- *  The purpose of this example is to query an array of data
- *  from an external Modbus slave device.
- *  This example is similar to "simple_master", but this example
- *  allows you to use software serial instead of hardware serial
- *  in case that you want to use D1 & D2 for other purposes.
- *  The link media can be USB or RS232.
- 
-  The circuit:
- * software serial rx(D3) connect to tx pin of another device
- * software serial tx(D4) connect to rx pin of another device
- 
- * In this example, we will use two important methods so that we can use
- * software serial.
- *
- * 1. Modbus::Modbus(uint8_t u8id)
- * This is a constructor for a Master/Slave through USB/RS232C via software serial
- * This constructor only specifies u8id (node address) and should be only
- * used if you want to use software serial instead of hardware serial.
- * This method is called if you create a ModBus object with only on parameter "u8id"
- * u8id is the node address of the arduino that will be programmed on,
- * 0 for master and 1..247 for slave
- * for example: Modbus master(0); 
- * If you use this constructor you have to begin ModBus object by
- * using "void Modbus::begin(SoftwareSerial *softPort, long u32speed)".
- * 
- * 2. void Modbus::begin(SoftwareSerial *sPort, long u32speed)
- * Initialize class object.
- * This is the method you have to use if you construct the ModBus object by using 
- * Modbus::Modbus(uint8_t u8id) in order to use software serial and to avoid problems.
- * You have to create a SoftwareSerial object on your own, as shown in the example.
- * sPort is a pointer to your SoftwareSerial object, u32speed is the baud rate, in 
- * standard increments (300..115200)
-
- created long time ago
- by smarmengol
- modified 29 July 2016
- by Helium6072
-
- This example code is in the public domain.
+/*
  */
 
-#include <ModbusRtu.h>
-#include <softSerial.h>
+#include "wanderer.h"
+#include "sensor.h"
 
-// data array for modbus network sharing
-uint16_t au16data[16];
 uint8_t u8state;
-
-softSerial softwareSerial(GPIO1 /*TX pin*/, GPIO2 /*RX pin*/);
-
-/**
- *  Modbus object declaration
- *  u8id : node id = 0 for master, = 1..247 for slave
- *  port : serial port
- *  u8txenpin : 0 for RS-232 and USB-FTDI 
- *               or any pin number > 1 for RS-485
- */
-Modbus master(0, softwareSerial); // this is master and RS-232 or USB-FTDI via software serial
-
-/**
- * This is an structe which contains a query to an slave device
- */
-modbus_t telegram;
-
 unsigned long u32wait;
+
+void wanderer_setup();
+void wanderer_write();
+uint8_t wanderer_read();
+
+void sensor_setup();
+void sensor_read();
 
 void setup() {
   Serial.begin( 115200 ); 
-  softwareSerial.begin(9600);//use the hardware serial if you want to connect to your computer via usb cable, etc.
-  master.start(); // start the ModBus object.
-  master.setTimeOut( 2000 ); // if there is no answer in 2000 ms, roll over
+  wanderer_setup();
+  sensor_setup();
   u32wait = millis() + 1000;
   u8state = 0; 
 }
 
 void loop() {
   switch( u8state ) {
-  case 0: 
-    if (millis() > u32wait) u8state++; // wait state
+  case 0: // wait state
+    if (millis() > u32wait) u8state++; 
     break;
-  case 1: 
-    telegram.u8id = 0x01; // slave address
-    telegram.u8fct = 0x03; // function code (this one is registers read)
-    telegram.u16RegAdd = 0x0101; // start address in slave
-    telegram.u16CoilsNo = 0x1; // number of elements (coils or registers) to read
-    telegram.au16reg = au16data; // pointer to a memory array in the Arduino
-
-    master.query( telegram ); // send query (only once)
+  case 1: // initiate things
+    wanderer_write();
+    sensor_read();
     u8state++;
     break;
-  case 2:
-    master.poll(); // check incoming messages
-    if (master.getState() == COM_IDLE) {
+  case 2: // complete things
+    if ( wanderer_read() == COM_IDLE) {
       u8state = 0;
-      u32wait = millis() + 2000; 
-        Serial.println(au16data[0]);//Or do something else!
+      u32wait = millis() + 2000;
+      Serial.println( battery_voltage );
+      Serial.println( load_current );
+      Serial.println( temperature );
+      Serial.println( humidity );
+      Serial.println( "-----" );
     }
     break;
   }
+}
+
+void wanderer_setup(){
+  telegram[0].u8id = 0x01; // slave address
+  telegram[0].u8fct = 0x03; // function code (this one is registers read)
+  telegram[0].u16RegAdd = 0x0101; // start address in slave
+  telegram[0].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
+  telegram[0].au16reg = au16data; // pointer to a memory array in the Arduino
+
+  telegram[1].u8id = 0x01; // slave address
+  telegram[1].u8fct = 0x03; // function code (this one is registers read)
+  telegram[1].u16RegAdd = 0x0105; // start address in slave
+  telegram[1].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
+  telegram[1].au16reg = au16data + 4; // pointer to a memory array in the Arduino
+
+  softwareSerial.begin(9600);//use the hardware serial if you want to connect to your computer via usb cable, etc.
+  master.start(); // start the ModBus object.
+  master.setTimeOut( 2000 ); // if there is no answer in 2000 ms, roll over
+  u8query = 0;
+}
+
+void wanderer_write(){
+  master.query( telegram[u8query] ); // send query (only once)
+  u8query++;
+	if (u8query > num_queries) u8query = 0;
+}
+
+uint8_t wanderer_read(){
+  master.poll(); // check incoming messages
+  // calculate based on latest in the data array, even if incoming message was not yet received
+  battery_voltage = (double) au16data[0] * 0.1; 
+  load_current = (double) au16data[4] * 0.01; 
+  return master.getState();
+}
+
+void sensor_setup(){
+ 	//vext on
+	pinMode(Vext,OUTPUT);
+	digitalWrite(Vext,LOW);
+	// Default settings: 
+	//  - Heater off
+	//  - 14 bit Temperature and Humidity Measurement Resolutions
+	hdc1080.begin(0x40);
+}
+
+void sensor_read(){
+	temperature = hdc1080.readTemperature();
+  humidity = hdc1080.readHumidity();
 }
