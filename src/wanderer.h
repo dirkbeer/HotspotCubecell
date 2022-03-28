@@ -27,6 +27,8 @@ Modbus master(0, softwareSerial); // this is master and RS-232 or USB-FTDI via s
 const int num_queries = 2;
 modbus_t telegram[num_queries];
 
+int num_read;
+
 double battery_voltage;
 double load_current;
 

@@ -27,21 +27,28 @@ void loop() {
   case 0: // wait state
     if (millis() > u32wait) u8state++; 
     break;
-  case 1: // initiate things
+  case 1: // keep initiating stateful things until all done
     wanderer_write();
-    sensor_read();
     u8state++;
     break;
-  case 2: // complete things
-    if ( wanderer_read() == COM_IDLE) {  // currently printing everything on every wanderer reading returned - how to disentangle to print only once everything is available?
-      u8state = 0;
-      u32wait = millis() + 2000;
-      Serial.println( battery_voltage );
-      Serial.println( load_current );
-      Serial.println( temperature );
-      Serial.println( humidity );
-      Serial.println( "-----" );
+  case 2: // keep checking for completion of the stateful things until all done
+    if ( wanderer_read() == COM_IDLE) {  
+      num_read++;
+      if ( num_read == num_queries ){
+        num_read = 0;
+        u8state++;
+      }
     }
+    break;
+  case 3: // do these things after the stateful things are done
+    Serial.println( battery_voltage );
+    Serial.println( load_current );
+    sensor_read();
+    Serial.println( temperature );
+    Serial.println( humidity );
+    Serial.println( "-----" );
+    u8state = 0;
+    u32wait = millis() + 2000;
     break;
   }
 }
@@ -63,6 +70,7 @@ void wanderer_setup(){
   master.start(); // start the ModBus object.
   master.setTimeOut( 2000 ); // if there is no answer in 2000 ms, roll over
   u8query = 0;
+  num_read = 0;
 }
 
 void wanderer_write(){
