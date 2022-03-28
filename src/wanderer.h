@@ -24,12 +24,13 @@ Modbus master(0, softwareSerial); // this is master and RS-232 or USB-FTDI via s
  */
 //#define NUM_QUERIES 2
 //modbus_t telegram[NUM_QUERIES];
-const int num_queries = 3;
+const int num_queries = 4;
 modbus_t telegram[num_queries];
 
 int num_read;
 
 double battery_voltage;
+double battery_soc;
 double load_voltage;
 double load_current;
 

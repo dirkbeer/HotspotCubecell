@@ -84,18 +84,24 @@ void wanderer_setup(){
   telegram[0].u16RegAdd = 0x0101; // start address in slave
   telegram[0].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
   telegram[0].au16reg = au16data; // pointer to a memory array in the Arduino
-  // load voltage
+  // battery soc
   telegram[1].u8id = 0x01; // slave address
   telegram[1].u8fct = 0x03; // function code (this one is registers read)
-  telegram[1].u16RegAdd = 0x0104; // start address in slave
+  telegram[1].u16RegAdd = 0x0100; // start address in slave
   telegram[1].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
   telegram[1].au16reg = au16data + 4; // pointer to a memory array in the Arduino
-  // load current
+  // load voltage
   telegram[2].u8id = 0x01; // slave address
   telegram[2].u8fct = 0x03; // function code (this one is registers read)
-  telegram[2].u16RegAdd = 0x0105; // start address in slave
+  telegram[2].u16RegAdd = 0x0104; // start address in slave
   telegram[2].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
   telegram[2].au16reg = au16data + 8; // pointer to a memory array in the Arduino
+  // load current
+  telegram[3].u8id = 0x01; // slave address
+  telegram[3].u8fct = 0x03; // function code (this one is registers read)
+  telegram[3].u16RegAdd = 0x0105; // start address in slave
+  telegram[3].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
+  telegram[3].au16reg = au16data + 12; // pointer to a memory array in the Arduino
 
   softwareSerial.begin(9600);//use the hardware serial if you want to connect to your computer via usb cable, etc.
   master.start(); // start the ModBus object.
@@ -114,8 +120,9 @@ uint8_t wanderer_read(){
   master.poll(); // check incoming messages
   // calculate based on latest in the data array, even if incoming message was not yet received
   battery_voltage = (double) au16data[0] * 0.1; 
-  load_voltage = (double) au16data[4] * 0.1; 
-  load_current = (double) au16data[8] * 0.01; 
+  battery_soc = (double) au16data[4]; 
+  load_voltage = (double) au16data[8] * 0.1; 
+  load_current = (double) au16data[12] * 0.01; 
   return master.getState();
 }
 
@@ -170,7 +177,7 @@ void loop() {
     }
     case DEVICE_STATE_SEND:
     {
-      appDataSize = 10;
+      appDataSize = 12;
       // hdc1080 data
       int16_t tempInt = temperature * 100;
       appData[0] = tempInt >> 8;
@@ -185,6 +192,8 @@ void loop() {
       appData[7] = (uint8_t)au16data[4];
       appData[8] = (uint8_t)(au16data[8]>>8);
       appData[9] = (uint8_t)au16data[8];
+      appData[10] = (uint8_t)(au16data[12]>>8);
+      appData[11] = (uint8_t)au16data[12];
       LoRaWAN.send();
       deviceState = DEVICE_STATE_CYCLE;
       break;
@@ -227,6 +236,8 @@ void loop() {
     break;
   case 3: // do these things after the stateful things are done
     Serial.println( battery_voltage );
+    Serial.println( battery_soc );
+    Serial.println( load_voltage );
     Serial.println( load_current );
     sensor_read();
     Serial.println( temperature );
