@@ -77,23 +77,6 @@ uint8_t appPort = 2;
 */
 uint8_t confirmedNbTrials = 4;
 
-/* Prepares the payload of the frame */
-static void prepareTxFrame( uint8_t port )
-{
-  /*appData size is LORAWAN_APP_DATA_MAX_SIZE which is defined in "commissioning.h".
-  *appDataSize max value is LORAWAN_APP_DATA_MAX_SIZE.
-  *if enabled AT, don't modify LORAWAN_APP_DATA_MAX_SIZE, it may cause system hanging or failure.
-  *if disabled AT, LORAWAN_APP_DATA_MAX_SIZE can be modified, the max value is reference to lorawan region and SF.
-  *for example, if use REGION_CN470, 
-  *the max value for different DR can be found in MaxPayloadOfDatarateCN470 refer to DataratesCN470 and BandwidthsCN470 in "RegionCN470.h".
-  */
-    appDataSize = 4;
-    appData[0] = 0x00;
-    appData[1] = 0x01;
-    appData[2] = 0x02;
-    appData[3] = 0x03;
-}
-
 void wanderer_setup(){
   telegram[0].u8id = 0x01; // slave address
   telegram[0].u8fct = 0x03; // function code (this one is registers read)
@@ -139,8 +122,8 @@ void sensor_setup(){
 }
 
 void sensor_read(){
-	temperature = hdc1080.readTemperature();
-  humidity = hdc1080.readHumidity();
+	temperature = (float)(hdc1080.readTemperature());
+  humidity = (float)(hdc1080.readHumidity());
 }
 
 void setup() {
@@ -179,7 +162,25 @@ void loop() {
     }
     case DEVICE_STATE_SEND:
     {
-      prepareTxFrame( appPort );
+      appDataSize = 10;
+      // hdc1080 data
+      unsigned char *puc;
+      puc = (unsigned char *)(&temperature);
+      appDataSize = 12;
+      appData[0] = puc[0];
+      appData[1] = puc[1];
+      appData[2] = puc[2];
+      appData[3] = puc[3];
+      puc = (unsigned char *)(&humidity);
+      appData[4] = puc[0];
+      appData[5] = puc[1];
+      appData[6] = puc[2];
+      appData[7] = puc[3];
+      // wanderer data
+      appData[8] = (uint8_t)(au16data[0]>>8);
+      appData[9] = (uint8_t)au16data[0];
+      appData[10] = (uint8_t)(au16data[1]>>8);
+      appData[11] = (uint8_t)au16data[1];
       LoRaWAN.send();
       deviceState = DEVICE_STATE_CYCLE;
       break;

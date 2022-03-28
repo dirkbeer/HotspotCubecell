@@ -6,7 +6,7 @@
 
 HDC1080 hdc1080;
 
-double temperature;
-double humidity;
+float temperature;
+float humidity;
 
 #endif /* SENSOR_H */
