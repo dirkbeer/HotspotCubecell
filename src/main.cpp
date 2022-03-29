@@ -10,42 +10,7 @@
 uint8_t u8state;
 unsigned long u32wait;
 
-void setup() {
-  boardInitMcu();
-  Serial.begin(115200);
-#if(AT_SUPPORT)
-  enableAt();
-#endif
-  deviceState = DEVICE_STATE_INIT;
-  LoRaWAN.ifskipjoin();
-
-//  Serial.begin( 115200 ); 
-  wanderer_setup();
-  sensor_setup();
-  u32wait = millis() + 1000;
-  u8state = 0; 
-}
-
-void loop() {
-  switch( deviceState )
-  {
-    case DEVICE_STATE_INIT:
-    {
-#if(AT_SUPPORT)
-      getDevParam();
-#endif
-      printDevParam();
-      LoRaWAN.init(loraWanClass,loraWanRegion);
-      deviceState = DEVICE_STATE_JOIN;
-      break;
-    }
-    case DEVICE_STATE_JOIN:
-    {
-      LoRaWAN.join();
-      break;
-    }
-    case DEVICE_STATE_SEND:
-    {
+void prepareTxFrame(){
       appDataSize = 12;
       // hdc1080 data
       int16_t tempInt = temperature * 100;
@@ -63,6 +28,36 @@ void loop() {
       appData[9] = (uint8_t)au16data[8];
       appData[10] = (uint8_t)(au16data[12]>>8);
       appData[11] = (uint8_t)au16data[12];
+}
+
+void setup() {
+  //boardInitMcu();
+  Serial.begin(115200);
+  deviceState = DEVICE_STATE_INIT;
+  //LoRaWAN.ifskipjoin();
+  wanderer_setup();
+  sensor_setup();
+  u32wait = millis() + 1000;
+  u8state = 0; 
+}
+
+void loop() {
+  switch( deviceState )
+  {
+    case DEVICE_STATE_INIT:
+    {
+      LoRaWAN.init(loraWanClass,loraWanRegion);
+      deviceState = DEVICE_STATE_JOIN;
+      break;
+    }
+    case DEVICE_STATE_JOIN:
+    {
+      LoRaWAN.join();
+      break;
+    }
+    case DEVICE_STATE_SEND:
+    {
+      prepareTxFrame();
       LoRaWAN.send();
       deviceState = DEVICE_STATE_CYCLE;
       break;
