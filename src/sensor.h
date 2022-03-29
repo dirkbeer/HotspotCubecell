@@ -1,5 +1,5 @@
 #ifndef SENSOR_H 
-#define SENSORR_H
+#define SENSOR_H
 
 #include <Wire.h>
 #include "HDC1080.h"
