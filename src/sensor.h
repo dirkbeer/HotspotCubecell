@@ -4,9 +4,12 @@
 #include <Wire.h>
 #include "HDC1080.h"
 
-HDC1080 hdc1080;
+extern HDC1080 hdc1080;
 
-float temperature;
-float humidity;
+extern float temperature;
+extern float humidity;
+
+void sensor_setup();
+void sensor_read();
 
 #endif /* SENSOR_H */
