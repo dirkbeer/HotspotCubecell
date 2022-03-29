@@ -31,12 +31,11 @@ void prepareTxFrame(){
 }
 
 void setup() {
-  //boardInitMcu();
   Serial.begin(115200);
-  deviceState = DEVICE_STATE_INIT;
-  //LoRaWAN.ifskipjoin();
   wanderer_setup();
   sensor_setup();
+  deviceState = DEVICE_STATE_INIT;
+  LoRaWAN.ifskipjoin();
   u32wait = millis() + 1000;
   u8state = 0; 
 }
