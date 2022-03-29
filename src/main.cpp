@@ -10,55 +10,6 @@
 uint8_t u8state;
 unsigned long u32wait;
 
-void wanderer_setup(){
-  // battery voltage
-  telegram[0].u8id = 0x01; // slave address
-  telegram[0].u8fct = 0x03; // function code (this one is registers read)
-  telegram[0].u16RegAdd = 0x0101; // start address in slave
-  telegram[0].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
-  telegram[0].au16reg = au16data; // pointer to a memory array in the Arduino
-  // battery soc
-  telegram[1].u8id = 0x01; // slave address
-  telegram[1].u8fct = 0x03; // function code (this one is registers read)
-  telegram[1].u16RegAdd = 0x0100; // start address in slave
-  telegram[1].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
-  telegram[1].au16reg = au16data + 4; // pointer to a memory array in the Arduino
-  // load voltage
-  telegram[2].u8id = 0x01; // slave address
-  telegram[2].u8fct = 0x03; // function code (this one is registers read)
-  telegram[2].u16RegAdd = 0x0104; // start address in slave
-  telegram[2].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
-  telegram[2].au16reg = au16data + 8; // pointer to a memory array in the Arduino
-  // load current
-  telegram[3].u8id = 0x01; // slave address
-  telegram[3].u8fct = 0x03; // function code (this one is registers read)
-  telegram[3].u16RegAdd = 0x0105; // start address in slave
-  telegram[3].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
-  telegram[3].au16reg = au16data + 12; // pointer to a memory array in the Arduino
-
-  softwareSerial.begin(9600);//use the hardware serial if you want to connect to your computer via usb cable, etc.
-  master.start(); // start the ModBus object.
-  master.setTimeOut( 2000 ); // if there is no answer in 2000 ms, roll over
-  u8query = 0;
-  num_read = 0;
-}
-
-void wanderer_write(){
-  master.query( telegram[u8query] ); // send query (only once)
-  u8query++;
-	if (u8query > num_queries) u8query = 0;
-}
-
-uint8_t wanderer_read(){
-  master.poll(); // check incoming messages
-  // calculate based on latest in the data array, even if incoming message was not yet received
-  battery_voltage = (double) au16data[0] * 0.1; 
-  battery_soc = (double) au16data[4]; 
-  load_voltage = (double) au16data[8] * 0.1; 
-  load_current = (double) au16data[12] * 0.01; 
-  return master.getState();
-}
-
 void setup() {
   boardInitMcu();
   Serial.begin(115200);
@@ -144,7 +95,7 @@ void loop() {
     u8state++;
     break;
   case 2: // keep checking for completion of the stateful things until all done
-    if ( wanderer_read() == COM_IDLE) {  
+    if ( !wanderer_polling() ) {  
       num_read++;
       if ( num_read == num_queries ){
         num_read = 0;
