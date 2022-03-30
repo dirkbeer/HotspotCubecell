@@ -3,10 +3,8 @@
 
 #include <softSerial.h>
 
-void wanderer_read();
 void wanderer_setup();
-void wanderer_write();
-bool wanderer_polling();
+void wanderer_read();
 
 #endif /* WANDERER_H */
 

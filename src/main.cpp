@@ -1,14 +1,15 @@
 /*
+ *  HotspotCubecell
+ *
  */
 #include "Arduino.h"
-#include "wanderer.h"
-#include "sensor.h"
 #include "helium.h"
+#include "sensor.h"
+#include "wanderer.h"
 
 void setup() {
-  Serial.begin(115200);
-  wanderer_setup();
   sensor_setup();
+  wanderer_setup();
   helium_setup();
 }
 

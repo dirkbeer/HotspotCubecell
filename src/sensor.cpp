@@ -1,18 +1,11 @@
 #include "sensor.h"
 
 HDC1080 hdc1080;
-
 float temperature;
 float humidity;
 
 void sensor_setup(){
- 	/*
-    //vext on
-	pinMode(Vext,OUTPUT);
-	digitalWrite(Vext,LOW);
-	hdc1080.begin(0x40);
-	//digitalWrite(Vext,HIGH); // turning sensor power off causes erroneous readings, but maybe delay would fix? how to correctly implement delay in loop?
-    */
+    // nothing needed here unless want to keep sensor on all the time
 }
 
 void sensor_read(){

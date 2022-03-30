@@ -1,5 +1,4 @@
 #include "helium.h"
-#include "sensor.h"
 
 /*
 * set LoraWan_RGB to Active,the RGB active in loraWan
@@ -67,6 +66,10 @@ uint8_t appPort = 2;
 * the datarate, in case the LoRaMAC layer did not receive an acknowledgment
 */
 uint8_t confirmedNbTrials = 4;
+
+extern float temperature;  // defined in sensor.cpp and needed here
+extern float humidity;
+extern uint16_t au16data[16];  // defined in wanderer.cpp and needed here
 
 void prepareTxFrame(){
     appDataSize = 12;
