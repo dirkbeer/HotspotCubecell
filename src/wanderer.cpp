@@ -1,10 +1,6 @@
 #include "wanderer.h"
 #include <ModbusRtu.h>
 
-// data array for modbus network sharing
-uint16_t au16data[16];
-uint8_t u8query; //!< pointer to message query
-
 softSerial softwareSerial(GPIO1 /*TX pin*/, GPIO2 /*RX pin*/);
 
 /**
@@ -17,65 +13,38 @@ softSerial softwareSerial(GPIO1 /*TX pin*/, GPIO2 /*RX pin*/);
 Modbus master(0, softwareSerial); // this is master and RS-232 or USB-FTDI via software serial
 
 /**
- * This is an structe which contains a query to an slave device
+ * The data array for modbus query results
  */
-//#define NUM_QUERIES 2
-//modbus_t telegram[NUM_QUERIES];
-const int num_queries = 4;
-modbus_t telegram[num_queries];
+uint16_t au16data[16];
 
-int num_read;
-
-double battery_voltage;
-double battery_soc;
-double load_voltage;
-double load_current;
+/**
+ * This is an structure which contains a query to an slave device, can't be bigger than au16data
+ */
+const uint8_t u8queries = 4;
+uint8_t u8id = 0x01; // slave id
+uint8_t u8fct = 0x03;;  // function code 0x03 = read, 0x06 = write
+uint16_t u16CoilsNo = 0x01; // number of coils to read
+modbus_t telegram[u8queries] = {
+    {u8id, u8fct, 0x0101, u16CoilsNo, au16data}, // battery voltage
+    {u8id, u8fct, 0x0100, u16CoilsNo, au16data + 4}, // battery soc
+    {u8id, u8fct, 0x0104, u16CoilsNo, au16data + 8}, // load voltage
+    {u8id, u8fct, 0x0105, u16CoilsNo, au16data + 12}, // load current
+};
 
 void wanderer_setup(){
-  // battery voltage
-  telegram[0].u8id = 0x01; // slave address
-  telegram[0].u8fct = 0x03; // function code (this one is registers read)
-  telegram[0].u16RegAdd = 0x0101; // start address in slave
-  telegram[0].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
-  telegram[0].au16reg = au16data; // pointer to a memory array in the Arduino
-  // battery soc
-  telegram[1].u8id = 0x01; // slave address
-  telegram[1].u8fct = 0x03; // function code (this one is registers read)
-  telegram[1].u16RegAdd = 0x0100; // start address in slave
-  telegram[1].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
-  telegram[1].au16reg = au16data + 4; // pointer to a memory array in the Arduino
-  // load voltage
-  telegram[2].u8id = 0x01; // slave address
-  telegram[2].u8fct = 0x03; // function code (this one is registers read)
-  telegram[2].u16RegAdd = 0x0104; // start address in slave
-  telegram[2].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
-  telegram[2].au16reg = au16data + 8; // pointer to a memory array in the Arduino
-  // load current
-  telegram[3].u8id = 0x01; // slave address
-  telegram[3].u8fct = 0x03; // function code (this one is registers read)
-  telegram[3].u16RegAdd = 0x0105; // start address in slave
-  telegram[3].u16CoilsNo = 0x1; // number of elements (coils or registers) to read
-  telegram[3].au16reg = au16data + 12; // pointer to a memory array in the Arduino
-
-  softwareSerial.begin(9600);//use the hardware serial if you want to connect to your computer via usb cable, etc.
-  master.start(); // start the ModBus object.
-  master.setTimeOut( 2000 ); // if there is no answer in 2000 ms, roll over
-  u8query = 0;
-  num_read = 0;
+    softwareSerial.begin(9600);//use the hardware serial if you want to connect to your computer via usb cable, etc.
+    master.start(); // start the ModBus object.
+    master.setTimeOut( 2000 ); // if there is no answer in 2000 ms, roll over
 }
 
-void wanderer_write(){
-  master.query( telegram[u8query] ); // send query (only once)
-  u8query++;
-	if (u8query > num_queries) u8query = 0;
-}
-
-bool wanderer_polling(){
-  master.poll(); // check incoming messages
-  // calculate based on latest in the data array, even if incoming message was not yet received
-  battery_voltage = (double) au16data[0] * 0.1; 
-  battery_soc = (double) au16data[4]; 
-  load_voltage = (double) au16data[8] * 0.1; 
-  load_current = (double) au16data[12] * 0.01; 
-  return master.getState() == COM_WAITING;
+void wanderer_read() {
+    uint8_t u8query = 0;
+    while (u8query < u8queries){
+        master.query( telegram[u8query] ); 
+        do {
+            master.poll();
+        } while ( master.getState() == COM_WAITING );
+        Serial.println( au16data[u8query*4] );
+        u8query++;
+    }
 }

@@ -1,4 +1,5 @@
 #include "helium.h"
+#include "sensor.h"
 
 /*
 * set LoraWan_RGB to Active,the RGB active in loraWan
@@ -29,7 +30,7 @@ LoRaMacRegion_t loraWanRegion = ACTIVE_REGION;
 DeviceClass_t  loraWanClass = LORAWAN_CLASS;
 
 /*the application data transmission duty cycle.  value in [ms].*/
-uint32_t appTxDutyCycle = 15000;
+uint32_t appTxDutyCycle = 15 * 1000; 
 
 /*OTAA or ABP*/
 bool overTheAirActivation = LORAWAN_NETMODE;
@@ -92,45 +93,3 @@ void helium_setup(){
     LoRaWAN.ifskipjoin();
 }
 
-void helium_run(){
-      switch( deviceState )
-  {
-    case DEVICE_STATE_INIT:
-    {
-      LoRaWAN.init(loraWanClass,loraWanRegion);
-      deviceState = DEVICE_STATE_JOIN;
-      break;
-    }
-    case DEVICE_STATE_JOIN:
-    {
-      LoRaWAN.join();
-      break;
-    }
-    case DEVICE_STATE_SEND:
-    {
-      prepareTxFrame();
-      LoRaWAN.send();
-      deviceState = DEVICE_STATE_CYCLE;
-      break;
-    }
-    case DEVICE_STATE_CYCLE:
-    {
-      // Schedule next packet transmission
-      txDutyCycleTime = appTxDutyCycle + randr( 0, APP_TX_DUTYCYCLE_RND );
-      LoRaWAN.cycle(txDutyCycleTime);
-      deviceState = DEVICE_STATE_SLEEP;
-      break;
-    }
-    case DEVICE_STATE_SLEEP:
-    {
-      LoRaWAN.sleep();
-      break;
-    }
-    default:
-    {
-      deviceState = DEVICE_STATE_INIT;
-      break;
-    }
-  }
-
-}
