@@ -2,7 +2,7 @@
 
 Monitor and control* your offgrid Helium hotspot over LoRaWAN.
 
-Depends only on battery power and LoRaWAN coverage for its operation, so keeps running even if hotspot is having problems.
+Depends only on battery or solar power and LoRaWAN coverage for its operation, so keeps running even if hotspot is having problems.
 
 * Remotely monitor parameters like temperature and battery state.
 * Remotely control* your charge controller to power cycle the hotspot and cell modem.
