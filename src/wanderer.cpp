@@ -63,7 +63,7 @@ void wanderer_read() {
     }
 }
 
-void wanderer_load_power_cycle() {
+void wanderer_load_off() {
     // turn load off
     au16data2[0] = 0x0; 
     uint8_t u8query = 0;
@@ -75,8 +75,9 @@ void wanderer_load_power_cycle() {
         Serial.println( au16data2[u8query*4] );
         u8query++;
     }
-    // wait 30 seconds
-    delay(30*1000);
+}
+
+void wanderer_load_on() {
     // turn load on
     au16data2[0] = 0x1;
     uint8_t u8query2 = 0;
@@ -88,5 +89,4 @@ void wanderer_load_power_cycle() {
         Serial.println( au16data2[u8query2*4] );
         u8query2++;
     }
-
 }

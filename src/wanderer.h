@@ -5,7 +5,8 @@
 
 void wanderer_setup();
 void wanderer_read();
-void wanderer_load_power_cycle();
+void wanderer_load_on();
+void wanderer_load_off();
 
 #endif /* WANDERER_H */
 
