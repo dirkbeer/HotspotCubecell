@@ -45,13 +45,20 @@ modbus_t telegram2[u8queries] = {
     {u8id2, u8fct2, 0x010a, u16CoilsNo2, au16data2}, // load on / off
 };
 
+extern eState_Wanderer wandererState;
+extern bool power_cycle_requested;
+extern u_long load_back_on_time;
+extern u_long power_cycle_duration;
+
 void wanderer_setup(){
     softwareSerial.begin(9600);//use the hardware serial if you want to connect to your computer via usb cable, etc.
     master.start(); // start the ModBus object.
     master.setTimeOut( 2000 ); // if there is no answer in 2000 ms, roll over
+    wandererState = WANDERER_STATE_LOAD_ON; // TODO: should check and set this instead of assuming
+    power_cycle_requested = false;  
 }
 
-void wanderer_read() {
+void wanderer_read_all() {
     uint8_t u8query = 0;
     while (u8query < u8queries){
         master.query( telegram[u8query] ); 
@@ -88,5 +95,33 @@ void wanderer_load_on() {
         } while ( master.getState() == COM_WAITING );
         Serial.println( au16data2[u8query2*4] );
         u8query2++;
+    }
+}
+
+void wanderer_load_toggle(eState_Wanderer wandererState, u_long power_cycle_duration){ // TODO: this sometimes causes the cubecell to send two uplinks in rapid succession - why? Does not skip uplink, instead causes an extra one
+    delay(1000);  // wait for other things (what?) to finish before printing - this does fix the incomplete printing issue, but why the issue? (one Serial.delayByte(); is not enough)
+    switch(wandererState){
+        case(WANDERER_STATE_LOAD_ON):
+        {
+            load_back_on_time = millis() + power_cycle_duration;
+            wanderer_load_off();
+            wandererState = WANDERER_STATE_LOAD_OFF;
+            Serial.println(F("load OFF ..."));
+            break;
+        }
+        case(WANDERER_STATE_LOAD_OFF):
+        {
+            if(millis()>load_back_on_time){
+            wanderer_load_on();
+            wandererState = WANDERER_STATE_LOAD_ON;
+            power_cycle_requested = false;
+            Serial.println(F("load ON ..."));
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
     }
 }
