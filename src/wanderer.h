@@ -10,6 +10,7 @@ enum eState_Wanderer
 };
 
 void wanderer_setup();
+eState_Wanderer wanderer_get_loadstate();
 void wanderer_read_all();
 void wanderer_load_on();
 void wanderer_load_off();

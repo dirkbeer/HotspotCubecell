@@ -17,7 +17,7 @@ void downLinkDataHandle(McpsIndication_t *mcpsIndication) // Note that the downl
 {
   Serial.printf("downlink received on FPort %d ...\r\n", mcpsIndication->Port);
   if (mcpsIndication->Port == 7) {  
-    power_cycle_requested = true; // this triggers the asynchronous load toggling in loop()
+    power_cycle_requested = true; // this triggers the asynchronous load toggling in loop()  // TODO: Need better handeling of load state and how to power cycle
     Serial.println(F("power cycle requested (FPort 7)..."));
   }
 }
@@ -26,6 +26,7 @@ void setup() {
   Serial.begin(115200);
   sensor_setup();
   wanderer_setup();
+  //delay(1000); // TODO: Why does none of the setup Serial.println work?
   helium_setup();
 }
 

@@ -72,7 +72,7 @@ extern float humidity;
 extern uint16_t au16data[16];  // defined in wanderer.cpp and needed here
 
 void prepareTxFrame(){
-    appDataSize = 12;
+    appDataSize = 88;
     // hdc1080 data
     int16_t tempInt = temperature * 100;
     appData[0] = tempInt >> 8;
@@ -89,6 +89,46 @@ void prepareTxFrame(){
     appData[9] = (uint8_t)au16data[8];
     appData[10] = (uint8_t)(au16data[12]>>8);
     appData[11] = (uint8_t)au16data[12];
+    appData[12] = (uint8_t)(au16data[16]>>8);
+    appData[13] = (uint8_t)au16data[16];
+    appData[14] = (uint8_t)(au16data[20]>>8);
+    appData[15] = (uint8_t)au16data[20];
+    appData[16] = (uint8_t)(au16data[24]>>8);
+    appData[17] = (uint8_t)au16data[24];
+    appData[18] = (uint8_t)(au16data[28]>>8);
+    appData[19] = (uint8_t)au16data[28];
+    appData[20] = (uint8_t)(au16data[32]>>8);
+    appData[21] = (uint8_t)au16data[32];
+    appData[22] = (uint8_t)(au16data[36]>>8);
+    appData[23] = (uint8_t)au16data[36];
+    appData[24] = (uint8_t)(au16data[40]>>8);
+    appData[25] = (uint8_t)au16data[40];
+    appData[26] = (uint8_t)(au16data[44]>>8);
+    appData[27] = (uint8_t)au16data[44];
+    appData[28] = (uint8_t)(au16data[48]>>8);
+    appData[29] = (uint8_t)au16data[48];
+    appData[30] = (uint8_t)(au16data[52]>>8);
+    appData[31] = (uint8_t)au16data[52];
+    appData[32] = (uint8_t)(au16data[56]>>8);
+    appData[33] = (uint8_t)au16data[56];
+    appData[34] = (uint8_t)(au16data[60]>>8);
+    appData[35] = (uint8_t)au16data[60];
+    appData[36] = (uint8_t)(au16data[64]>>8);
+    appData[37] = (uint8_t)au16data[64];
+    appData[38] = (uint8_t)(au16data[68]>>8);
+    appData[39] = (uint8_t)au16data[68];
+    appData[40] = (uint8_t)(au16data[72]>>8);
+    appData[41] = (uint8_t)au16data[72];
+    appData[42] = (uint8_t)(au16data[76]>>8);
+    appData[43] = (uint8_t)au16data[76];
+    appData[44] = (uint8_t)(au16data[80]>>8);
+    appData[45] = (uint8_t)au16data[80];
+    appData[46] = (uint8_t)(au16data[84]>>8);
+    appData[47] = (uint8_t)au16data[84];
+    appData[48] = (uint8_t)(au16data[88]>>8);
+    appData[49] = (uint8_t)au16data[88];
+    appData[50] = (uint8_t)(au16data[92]>>8);
+    appData[51] = (uint8_t)au16data[92];
 }
 
 void helium_setup(){
