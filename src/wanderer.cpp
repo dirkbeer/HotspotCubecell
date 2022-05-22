@@ -47,7 +47,7 @@ modbus_t telegram[u8queries] = {
     {u8id, u8fct, 0x0115, u16CoilsNo, au16data + 80}, // total operating days
     {u8id, u8fct, 0x0116, u16CoilsNo, au16data + 84}, // total battery over-discharges 
     {u8id, u8fct, 0x0117, u16CoilsNo, au16data + 88}, // total battery full-charges
-    {u8id, u8fct, 0x0120, u16CoilsNo, au16data + 92}, // total battery full-charges
+    {u8id, u8fct, 0x0120, u16CoilsNo, au16data + 92}, // load status & charging state
 };
 
 /**
