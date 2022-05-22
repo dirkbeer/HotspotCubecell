@@ -89,29 +89,6 @@ void wanderer_setup(){
     softwareSerial.begin(9600);//use the hardware serial if you want to connect to your computer via usb cable, etc.
     master.start(); // start the ModBus object.
     master.setTimeOut( 2000 ); // if there is no answer in 2000 ms, roll over
-    wandererState = wanderer_get_loadstate(); // TODO: Need better handeling of load state and how to power cycle
-    power_cycle_requested = false;  
-}
-
-eState_Wanderer wanderer_get_loadstate() {
-    uint8_t u8query = 0;
-    eState_Wanderer load_state;
-    while (u8query < u8queries3){
-        master.query( telegram3[u8query] ); 
-        do {
-            master.poll();
-        } while ( master.getState() == COM_WAITING );
-        Serial.println( au16data3[u8query*4] );
-        u8query++;
-    }
-    if ( (bool)( au16data3[0]>>7 ) ){
-        load_state = WANDERER_STATE_LOAD_ON;
-        Serial.println( "WANDERER_STATE_LOAD_ON" );
-    } else {
-        load_state = WANDERER_STATE_LOAD_OFF;
-        Serial.println( "WANDERER_STATE_LOAD_OFF" );
-    }
-    return load_state;
 }
 
 void wanderer_read_all() {
@@ -121,7 +98,7 @@ void wanderer_read_all() {
         do {
             master.poll();
         } while ( master.getState() == COM_WAITING );
-        Serial.println( au16data[u8query*4] );
+        //Serial.println( au16data[u8query*4] );
         u8query++;
     }
 }
@@ -135,7 +112,7 @@ void wanderer_load_off() {
         do {
             master.poll();
         } while ( master.getState() == COM_WAITING );
-        Serial.println( au16data2[u8query*4] );
+        //Serial.println( au16data2[u8query*4] );
         u8query++;
     }
 }
@@ -149,35 +126,8 @@ void wanderer_load_on() {
         do {
             master.poll();
         } while ( master.getState() == COM_WAITING );
-        Serial.println( au16data2[u8query2*4] );
+        //Serial.println( au16data2[u8query2*4] );
         u8query2++;
     }
 }
 
-void wanderer_load_toggle(eState_Wanderer wandererState, u_long power_cycle_duration){ // TODO: this sometimes causes the cubecell to send two uplinks in rapid succession - why? Does not skip uplink, instead causes an extra one
-    delay(1000);  // TODO: wait for other things (what?) to finish before printing - this does fix the incomplete printing issue, but why the issue? (one Serial.delayByte(); is not enough)
-    switch(wandererState){
-        case(WANDERER_STATE_LOAD_ON):
-        {
-            load_back_on_time = millis() + power_cycle_duration;
-            wanderer_load_off();
-            wandererState = WANDERER_STATE_LOAD_OFF;
-            Serial.println(F("load OFF ..."));
-            break;
-        }
-        case(WANDERER_STATE_LOAD_OFF):
-        {
-            if(millis()>load_back_on_time){
-            wanderer_load_on();
-            wandererState = WANDERER_STATE_LOAD_ON;
-            power_cycle_requested = false;
-            Serial.println(F("load ON ..."));
-            }
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
-}
