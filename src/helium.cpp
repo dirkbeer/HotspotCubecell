@@ -65,7 +65,7 @@ uint8_t appPort = 2;
 * Note, that if NbTrials is set to 1 or 2, the MAC will not decrease
 * the datarate, in case the LoRaMAC layer did not receive an acknowledgment
 */
-uint8_t confirmedNbTrials = 4;
+uint8_t confirmedNbTrials = 6;  // was 4, for no adr, LoRaWan_APP.cpp:defaultDrForNoAdr defaults to DR_3, and max payload for DR_1 is 53 bytes, just enough, so setting of 6 here allows fallback to DR_1
 
 extern float temperature;  // defined in sensor.cpp and needed here
 extern float humidity;
@@ -133,6 +133,5 @@ void prepareTxFrame(){
 
 void helium_setup(){
     deviceState = DEVICE_STATE_INIT;
-    LoRaWAN.ifskipjoin();
 }
 
