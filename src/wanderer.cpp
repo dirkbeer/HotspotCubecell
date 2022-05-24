@@ -80,10 +80,10 @@ modbus_t telegram3[u8queries] = {
     {u8id3, u8fct3, 0x0120, u16CoilsNo3, au16data3}, // load state
 };
 
-extern eState_Wanderer wandererState;
 extern bool power_cycle_requested;
-extern u_long load_back_on_time;
-extern u_long power_cycle_duration;
+extern bool timer_on;
+extern uint32_t end_time;
+extern uint32_t power_cycle_duration;
 
 void wanderer_setup(){
     softwareSerial.begin(9600);//use the hardware serial if you want to connect to your computer via usb cable, etc.
@@ -131,3 +131,16 @@ void wanderer_load_on() {
     }
 }
 
+void wanderer_load_cycle() {
+    if (!timer_on) {
+        wanderer_load_off();
+        Serial.println( "Load OFF");
+        timer_on = true;
+        end_time = millis() + power_cycle_duration;
+    } else if (end_time <= millis()) {
+        wanderer_load_on();
+        Serial.println( "Load ON");
+        timer_on = false;
+        power_cycle_requested = false; 
+    }
+}

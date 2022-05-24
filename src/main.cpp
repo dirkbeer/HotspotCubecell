@@ -7,6 +7,11 @@
 #include "sensor.h"
 #include "wanderer.h"
 
+bool power_cycle_requested = false;
+bool timer_on = false;
+uint32_t end_time;
+uint32_t power_cycle_duration = 3 * appTxDutyCycle;
+
 //downlink data handle function
 void downLinkDataHandle(McpsIndication_t *mcpsIndication) // Note that the downlink must contain data in order to be trigger this; also, make sure no other integrations are sending downlinks - dots in console should be blue.
 {
@@ -16,6 +21,9 @@ void downLinkDataHandle(McpsIndication_t *mcpsIndication) // Note that the downl
   }
   if (mcpsIndication->Port == 6) {  
     wanderer_load_off();
+  }
+  if (mcpsIndication->Port == 8) {
+    power_cycle_requested = true;
   }
 }
 
@@ -43,9 +51,9 @@ void loop(){
     }
     case DEVICE_STATE_SEND:
     {
-      sensor_read();
-      wanderer_read_all();
-      prepareTxFrame();
+      //sensor_read();
+      //wanderer_read_all();
+      //prepareTxFrame();
       LoRaWAN.send();
       deviceState = DEVICE_STATE_CYCLE;
       break;
@@ -60,6 +68,9 @@ void loop(){
     }
     case DEVICE_STATE_SLEEP:
     {
+      if ( power_cycle_requested ) {
+        wanderer_load_cycle();
+      }
       LoRaWAN.sleep();
       break;
     }

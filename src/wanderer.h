@@ -13,6 +13,7 @@ void wanderer_setup();
 void wanderer_read_all();
 void wanderer_load_on();
 void wanderer_load_off();
+void wanderer_load_cycle();
 
 #endif /* WANDERER_H */
 
