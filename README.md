@@ -14,3 +14,5 @@ Hardware used:
 * 12V to 3.3V step down converter (to power the Cubecell directly off the battery)
  
 
+Follow these instructions to patch ADR functionality to ensure the device does not reduce data rate, so that large packets can be sent on a prolonged basis:
+`https://docs.helium.com/use-the-network/devices/development/heltec/cubecell-dev-board/arduino/#patching-adr-functionality`
